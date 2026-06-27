@@ -1,18 +1,27 @@
 // /api/attendance.js
-let db = { globalSchedules: [], attendanceLogs: [] }; // Catatan: Data in-memory akan ter-reset di Serverless. Gunakan Database eksternal seperti Firestore/Supabase untuk produksi.
 
+// Fungsi handler utama
 export default async function handler(req, res) {
-    const { method, url } = req;
-    
-    // Header CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    
-    if (url === '/api/hrd/upload-schedule' && method === 'POST') {
-        db.globalSchedules = [{ name: "Budi", date: "2026-06-27", startTime: "08:00", endTime: "17:00" }];
-        return res.json({ status: "success", message: "Jadwal diunggah." });
+  // 1. Header untuk mencegah error CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Menangani pre-flight request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // 2. Logic API Anda
+  try {
+    if (req.method === 'POST') {
+      // Contoh: Jika user melakukan POST ke /api/attendance
+      return res.status(200).json({ status: "success", message: "API Berjalan Normal" });
+    } else {
+      return res.status(200).json({ status: "success", message: "Gunakan POST untuk absensi" });
     }
-    
-    // Tambahkan logika /api/employee/schedule, /api/attendance/check-in, dsb di sini...
-    
-    res.status(404).json({ message: "Endpoint tidak ditemukan" });
+  } catch (error) {
+    // Jika ada error di dalam, kirim pesan error (agar tidak crash 500)
+    return res.status(500).json({ status: "error", message: error.message });
+  }
 }
