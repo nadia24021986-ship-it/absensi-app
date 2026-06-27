@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/attendance.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
