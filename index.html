@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipe Aplikasi Absensi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        h2 { margin-top: 0; color: #1f2937; }
+        button { background-color: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        button:hover { background-color: #2563eb; }
+        .btn-green { background-color: #10b981; } .btn-green:hover { background-color: #059669; }
+        .btn-red { background-color: #ef4444; } .btn-red:hover { background-color: #dc2626; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        #responseLog { background: #1f2937; color: #10b981; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; margin-top: 15px; min-height: 50px; }
+    </style>
+</head>
+<body>
+
+    <!-- Panel HRD -->
+    <div class="card">
+        <h2>👨‍💼 Panel Admin HRD</h2>
+        <p style="font-size: 14px; color: #666;">Klik tombol di bawah untuk mensimulasikan HRD meng-upload foto jadwal yang kemudian diproses AI menjadi database jadwal karyawan.</p>
+        <button onclick="uploadSchedule()">Unggah Foto Jadwal (Proses AI)</button>
+    </div>
+
+    <!-- Panel Karyawan -->
+    <div class="card">
+        <h2>📱 Aplikasi Karyawan</h2>
+        <label>Masukkan Nama (Contoh: Budi atau Siti):</label>
+        <input type="text" id="empName" placeholder="Ketik nama Anda...">
+        <button onclick="checkSchedule()" style="background-color: #6b7280;">1. Muat Jadwal Saya</button>
+        
+        <div id="scheduleDisplay" style="margin-top: 15px; font-weight: bold; color: #3b82f6;"></div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn-green" onclick="checkIn()">2. Check In</button>
+            <button class="btn-red" onclick="checkOut()">3. Check Out</button>
+        </div>
+    </div>
+
+    <!-- Log Pesan Sistem -->
+    <div class="card">
+        <h3>Log Sistem:</h3>
+        <div id="responseLog">Menunggu aksi...</div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        function logToScreen(msg) {
+            document.getElementById('responseLog').innerHTML = msg;
+        }
+
+        async function uploadSchedule() {
+            try {
+                const res = await fetch(`${API_URL}/hrd/upload-schedule`, { method: 'POST' });
+                const data = await res.json();
+                logToScreen(data.message + "<br><br>Jadwal Budi: 08:00 - 17:00<br>Jadwal Siti: 12:00 - 21:00");
+            } catch (err) { logToScreen("Error: Pastikan server.js sudah berjalan!"); }
+        }
+
+        async function checkSchedule() {
+            const name = document.getElementById('empName').value;
+            if(!name) return alert('Masukkan nama dulu!');
+            
+            try {
+                const res = await fetch(`${API_URL}/employee/schedule/${name}`);
+                const data = await res.json();
+                if(data.status === 'success') {
+                    document.getElementById('scheduleDisplay').innerText = `Jadwal Anda Hari Ini: ${data.data.startTime} - ${data.data.endTime}`;
+                    logToScreen(`Jadwal untuk ${name} berhasil dimuat.`);
+                } else {
+                    document.getElementById('scheduleDisplay').innerText = data.message;
+                    logToScreen(data.message);
+                }
+            } catch (err) { logToScreen("Error koneksi ke server."); }
+        }
+
+        async function checkIn() {
+            const name = document.getElementById('empName').value;
+            try {
+                const res = await fetch(`${API_URL}/attendance/check-in`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await res.json();
+                logToScreen(data.message);
+            } catch (err) { logToScreen("Error saat Check-In."); }
+        }
+
+        async function checkOut() {
+            const name = document.getElementById('empName').value;
+            try {
+                const res = await fetch(`${API_URL}/attendance/check-out`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await res.json();
+                logToScreen(data.message);
+            } catch (err) { logToScreen("Error saat Check-Out."); }
+        }
+    </script>
+</body>
+</html>
